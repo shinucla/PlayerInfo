@@ -1,3 +1,5 @@
+local PlayerInfo = select( 2, ... );
+
 -- cached variables
 local pi, pi2 = math.pi, math.pi * 2
 local floor = math.floor
@@ -41,15 +43,15 @@ end
 
 
 --------------------------------------------------------------------------------
--- class PlayerInfo_Arrow
+-- class PlayerInfo.GpsArrow
 --------------------------------------------------------------------------------
 
-PlayerInfo_Arrow = {};
-PlayerInfo_Arrow.__index = PlayerInfo_Arrow;
+PlayerInfo.GpsArrow = {};
+PlayerInfo.GpsArrow.__index = PlayerInfo.GpsArrow;
 
-function PlayerInfo_Arrow:new()
+function PlayerInfo.GpsArrow:new()
    local self = {};                      -- Create a blank table
-   setmetatable(self, PlayerInfo_Arrow); -- Set the metatable so we used PlayerInfo_Arrow's __index imbue the class
+   setmetatable(self, PlayerInfo.GpsArrow); -- Set the metatable so we used PlayerInfo.GpsArrow's __index imbue the class
 
    self.targetX = nil;
    self.targetY = nil;
@@ -62,7 +64,7 @@ function PlayerInfo_Arrow:new()
    return self;
 end
 
-function PlayerInfo_Arrow:initArrow()
+function PlayerInfo.GpsArrow:initArrow()
    -- creating frame that holds arrorw
    self.frame = CreateFrame("Button", nil, UIParent);
    self.frame:Hide()
@@ -121,7 +123,7 @@ function PlayerInfo_Arrow:initArrow()
    end)
 end
 
-function PlayerInfo_Arrow:updateArrow(direction, distance)
+function PlayerInfo.GpsArrow:updateArrow(direction, distance)
    local cell = floor(direction / pi2 * 108 + 0.5) % 108
    if cell ~= self.currentCell then
       self.currentCell = cell
@@ -143,15 +145,15 @@ function PlayerInfo_Arrow:updateArrow(direction, distance)
    end
 end
 
-function PlayerInfo_Arrow:show(player)
+function PlayerInfo.GpsArrow:show(player)
    self.frame:Show()
    self.targetPlayer = player
 end
 
-function PlayerInfo_Arrow:ShowRunTo(player)
+function PlayerInfo.GpsArrow:ShowRunTo(player)
    return self:show(player)
 end
 
-function PlayerInfo_Arrow:LoadPosition(point, x, y)
+function PlayerInfo.GpsArrow:LoadPosition(point, x, y)
    self.frame:SetPoint(point, x, y);
 end

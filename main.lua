@@ -1,9 +1,8 @@
---local me = select( 2, ... );
---PlayerInfo = me;
+local me = select( 2, ... );
+PlayerInfo = me;
 
 SLASH_PLAYERINFO1 = "/playerinfo";
 SLASH_PLAYERINFO2 = "/pi";
-
 
 local playerlist = {};
 local playerlistFrames = {};
@@ -14,9 +13,13 @@ local desiredInspectedTarget = nil;
 local desiredTooltip = nil;
 local target_hk = nil;
 
-local arrow1 = _G["PlayerInfo_Arrow"]:new();
-local arrow2 = _G["PlayerInfo_Arrow"]:new();
-local arrow3 = _G["PlayerInfo_Arrow"]:new();
+--local arrow1 = _G["PlayerInfo_Arrow"]:new();
+--local arrow2 = _G["PlayerInfo_Arrow"]:new();
+--local arrow3 = _G["PlayerInfo_Arrow"]:new();
+local arrow1 = PlayerInfo.GpsArrow:new();
+local arrow2 = PlayerInfo.GpsArrow:new();
+local arrow3 = PlayerInfo.GpsArrow:new();
+
 
 --local player1 = Player:new(UIParent, "Blk", 1, "Blood", 123, 1, 1234);
 --player1.frame:Show();
