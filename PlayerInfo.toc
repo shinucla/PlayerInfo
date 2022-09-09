@@ -1,0 +1,13 @@
+## Interface: 20403
+## Author: Sleepeejoe
+## Title: |c0022FF22Player Info|r
+## Notes: Player Info
+## Version : 1.1
+## SavedVariables: EnemyNameDB
+## SavedVariablesPerCharacter: CharacterEnemyNameDB
+
+PlayerInfo_Arrow.lua
+NDBMArrow.lua
+main.lua
+EnemyNames.ua
+Player.lua
