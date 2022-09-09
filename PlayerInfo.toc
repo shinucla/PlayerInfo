@@ -6,7 +6,7 @@
 ## SavedVariables: EnemyNameDB
 ## SavedVariablesPerCharacter: CharacterEnemyNameDB
 
-PlayerInfo_Arrow.lua
+GpsArrow.lua
 NDBMArrow.lua
 main.lua
 EnemyNames.ua
