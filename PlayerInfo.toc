@@ -7,7 +7,7 @@
 ## SavedVariablesPerCharacter: CharacterEnemyNameDB
 
 GpsArrow.lua
-NDBMArrow.lua
-main.lua
-EnemyNames.ua
 Player.lua
+PlayerFrame.lua
+MainWindow.lua
+main.lua
