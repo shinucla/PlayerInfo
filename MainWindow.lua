@@ -153,9 +153,6 @@ function PlayerInfo.MainWindow:CreateContainer(scrollframe)
 end
 
 function PlayerInfo.MainWindow:AddButton(title, point, func)
-   print(title);
-   print(point);
-
    local btn = CreateFrame("Button", nil, self.frame, "UIPanelButtonTemplate");
    btn:SetPoint(point.point, point.xOfs, point.yOfs); -- "TOPRIGHT", -10, -10);
    btn:SetSize(100, 25);

@@ -18,6 +18,7 @@ local arrow2 = PlayerInfo.GpsArrow:new();
 local arrow3 = PlayerInfo.GpsArrow:new();
 
 local mainWindow = PlayerInfo.MainWindow:Create("main", UIParent, 400, 250);
+PlayerInfo.mainWindow = mainWindow;
 
 mainWindow:AddButton("check team",
                      {["point"] = "TOPRIGHT"; ["xOfs"] = -7; ["yOfs"] = -7 },
@@ -68,14 +69,25 @@ end
 -- Event Hooks
 --------------------------------------------------------------------------------
 
+mainWindow.frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+mainWindow.frame:RegisterEvent("PLAYER_LEAVING_WORLD");
 mainWindow.frame:RegisterEvent("ADDON_LOADED")
 mainWindow.frame:RegisterEvent("PLAYER_ENTERING_BATTLEGROUND");
 mainWindow.frame:RegisterEvent("PLAYER_FOCUS_CHANGED");
 mainWindow.frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 --mainWindow.frame:RegisterEvent("INSPECT_TALENT_READY");
 
-mainWindow.frame:SetScript("OnEvent", function(self, event, ...)
+mainWindow.frame:SetScript("OnEvent",
+                           function(self, event, ...)
                               local msg, sender = ...;
+
+                              if ("PLAYER_ENTERING_WORLD" == event) then
+                                 PlayerInfo.OnPlayerEnteringWorld();
+                              end
+
+                              if ("PLAYER_LEAVING_WORLD" == event) then
+                                 PlayerInfo.OnPlayerLeavingWorld();
+                              end
 
                               if ("ADDON_LOADED" == event and "PlayerInfo" == msg) then
                                  DEFAULT_CHAT_FRAME:AddMessage("Welcome to Player Info", 1,1,0);
@@ -142,12 +154,49 @@ mainWindow.frame:SetScript("OnEvent", function(self, event, ...)
                               then
                                  --SendChatMessage("==> Rogue here! <==", "YELL");
                               end
-end);
+                           end
+);
 
 
 --------------------------------------------------------------------------------
 -- functions
 --------------------------------------------------------------------------------
+
+function PlayerInfo.OnPlayerEnteringWorld()
+   -- Save LastPoint
+   local p, r, rp, xofs, yofs = mainWindow.frame:GetPoint();
+   CharacterEnemyNameDB.LastPoint = CharacterEnemyNameDB.LastPoint or {};
+   CharacterEnemyNameDB.LastPoint.point = CharacterEnemyNameDB.LastPoint.point or p;
+   CharacterEnemyNameDB.LastPoint.xOfs  = CharacterEnemyNameDB.LastPoint.xOfs or xofs;
+   CharacterEnemyNameDB.LastPoint.yOfs  = CharacterEnemyNameDB.LastPoint.yOfs or yofs;
+
+   -- addon main window position
+   if (CharacterEnemyNameDB
+       and CharacterEnemyNameDB.LastPoint
+       and CharacterEnemyNameDB.LastPoint.point
+       and CharacterEnemyNameDB.LastPoint.xOfs
+       and CharacterEnemyNameDB.LastPoint.yOfs) then
+      local p, r, rp, xofs, yofs = PlayerInfo.mainWindow.frame:GetPoint();
+
+      if (p ~= CharacterEnemyNameDB.LastPoint.point
+          or xofs ~= CharacterEnemyNameDB.LastPoint.xOfs
+          or yofs ~= CharacterEnemyNameDB.LastPoint.yOfs) then
+         PlayerInfo.mainWindow.frame:SetPoint(CharacterEnemyNameDB.LastPoint.point,
+                                              UIParent,
+                                              CharacterEnemyNameDB.LastPoint.xOfs,
+                                              CharacterEnemyNameDB.LastPoint.yOfs);
+      end
+   end
+end
+
+function PlayerInfo.OnPlayerLeavingWorld()
+   -- Save LastPoint
+   local p, r, rp, xofs, yofs = mainWindow.frame:GetPoint();
+   CharacterEnemyNameDB.LastPoint = CharacterEnemyNameDB.LastPoint or {};
+   CharacterEnemyNameDB.LastPoint.point = CharacterEnemyNameDB.LastPoint.point or p;
+   CharacterEnemyNameDB.LastPoint.xOfs  = CharacterEnemyNameDB.LastPoint.xOfs or xofs;
+   CharacterEnemyNameDB.LastPoint.yOfs  = CharacterEnemyNameDB.LastPoint.yOfs or yofs;
+end
 
 function PlayerInfo_OnTooltipSetUnit(self, event, ...)
    local Name = GameTooltip:GetUnit();
@@ -305,7 +354,6 @@ function ListEnemyDB(role)
    updatePlayerInfoImplementation1(40);
 
    for i = 1, #(CharacterEnemyNameDB[role]) do
-      print(CharacterEnemyNameDB[role][i]);
       addToList(CharacterEnemyNameDB[role][i], (role == "heal" and "Holy" or "Blood"), 0);
    end
 
