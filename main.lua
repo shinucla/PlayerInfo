@@ -69,8 +69,8 @@ end
 -- Event Hooks
 --------------------------------------------------------------------------------
 
+mainWindow.frame:RegisterEvent("PLAYER_LOGIN");
 mainWindow.frame:RegisterEvent("PLAYER_ENTERING_WORLD");
-mainWindow.frame:RegisterEvent("PLAYER_LEAVING_WORLD");
 mainWindow.frame:RegisterEvent("ADDON_LOADED")
 mainWindow.frame:RegisterEvent("PLAYER_ENTERING_BATTLEGROUND");
 mainWindow.frame:RegisterEvent("PLAYER_FOCUS_CHANGED");
@@ -78,15 +78,15 @@ mainWindow.frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 --mainWindow.frame:RegisterEvent("INSPECT_TALENT_READY");
 
 mainWindow.frame:SetScript("OnEvent",
-                           function(self, event, ...)
+                           function(self, event, ...) -- ... = isLogin, isReload
                               local msg, sender = ...;
 
-                              if ("PLAYER_ENTERING_WORLD" == event) then
-                                 PlayerInfo.OnPlayerEnteringWorld();
+                              if ("PLAYER_LOGIN" == event) then
+                                 PlayerInfo.LoadLastPoint();
                               end
 
-                              if ("PLAYER_LEAVING_WORLD" == event) then
-                                 PlayerInfo.OnPlayerLeavingWorld();
+                              if ("PLAYER_ENTERING_WORLD" == event) then
+                                 PlayerInfo.SaveLastPoint();
                               end
 
                               if ("ADDON_LOADED" == event and "PlayerInfo" == msg) then
@@ -162,36 +162,29 @@ mainWindow.frame:SetScript("OnEvent",
 -- functions
 --------------------------------------------------------------------------------
 
-function PlayerInfo.OnPlayerEnteringWorld()
-   -- Save LastPoint
-   local p, r, rp, xofs, yofs = mainWindow.frame:GetPoint();
-   CharacterEnemyNameDB.LastPoint = CharacterEnemyNameDB.LastPoint or {};
-   CharacterEnemyNameDB.LastPoint.point = CharacterEnemyNameDB.LastPoint.point or p;
-   CharacterEnemyNameDB.LastPoint.xOfs  = CharacterEnemyNameDB.LastPoint.xOfs or xofs;
-   CharacterEnemyNameDB.LastPoint.yOfs  = CharacterEnemyNameDB.LastPoint.yOfs or yofs;
+function PlayerInfo.LoadLastPoint()
+   local option = CharacterEnemyNameDB;
 
-   -- addon main window position
-   if (CharacterEnemyNameDB
-       and CharacterEnemyNameDB.LastPoint
-       and CharacterEnemyNameDB.LastPoint.point
-       and CharacterEnemyNameDB.LastPoint.xOfs
-       and CharacterEnemyNameDB.LastPoint.yOfs) then
+   if (option
+       and option.LastPoint
+       and option.LastPoint.point
+       and option.LastPoint.xOfs
+       and option.LastPoint.yOfs) then
       local p, r, rp, xofs, yofs = PlayerInfo.mainWindow.frame:GetPoint();
 
-      if (p ~= CharacterEnemyNameDB.LastPoint.point
-          or xofs ~= CharacterEnemyNameDB.LastPoint.xOfs
-          or yofs ~= CharacterEnemyNameDB.LastPoint.yOfs) then
-         PlayerInfo.mainWindow.frame:SetPoint(CharacterEnemyNameDB.LastPoint.point,
+      if (p ~= option.LastPoint.point
+          or xofs ~= option.LastPoint.xOfs
+          or yofs ~= option.LastPoint.yOfs) then
+         PlayerInfo.mainWindow.frame:SetPoint(option.LastPoint.point,
                                               UIParent,
-                                              CharacterEnemyNameDB.LastPoint.xOfs,
-                                              CharacterEnemyNameDB.LastPoint.yOfs);
+                                              option.LastPoint.xOfs,
+                                              option.LastPoint.yOfs);
       end
    end
 end
 
-function PlayerInfo.OnPlayerLeavingWorld()
-   -- Save LastPoint
-   local p, r, rp, xofs, yofs = mainWindow.frame:GetPoint();
+function PlayerInfo.SaveLastPoint()
+   local p, r, rp, xofs, yofs = PlayerInfo.mainWindow.frame:GetPoint();
    CharacterEnemyNameDB.LastPoint = CharacterEnemyNameDB.LastPoint or {};
    CharacterEnemyNameDB.LastPoint.point = CharacterEnemyNameDB.LastPoint.point or p;
    CharacterEnemyNameDB.LastPoint.xOfs  = CharacterEnemyNameDB.LastPoint.xOfs or xofs;
