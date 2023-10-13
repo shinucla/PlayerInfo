@@ -163,6 +163,16 @@ mainWindow.frame:SetScript("OnEvent",
 --------------------------------------------------------------------------------
 
 function PlayerInfo.LoadLastPoint()
+   if (true) then
+      local p, r, rp, xofs, yofs = PlayerInfo.mainWindow.frame:GetPoint();
+
+      PlayerInfo.mainWindow.frame:SetPoint(p,
+                                           UIParent,
+                                           700,
+                                           -295);
+      return;
+   end
+   
    local option = CharacterEnemyNameDB;
 
    if (option
@@ -181,6 +191,12 @@ function PlayerInfo.LoadLastPoint()
                                               option.LastPoint.yOfs);
       end
    end
+
+   PlayerInfo.mainWindow.frame:SetPoint(option.LastPoint.point,
+                                        UIParent,
+                                        option.LastPoint.xOfs,
+                                        option.LastPoint.yOfs);
+
 end
 
 function PlayerInfo.SaveLastPoint()
@@ -192,6 +208,7 @@ function PlayerInfo.SaveLastPoint()
 end
 
 function PlayerInfo_OnTooltipSetUnit(self, event, ...)
+   PlayerInfo.SaveLastPoint();
    local Name = GameTooltip:GetUnit();
    if ( CanInspect("mouseover") ) and ( UnitName("mouseover") == Name ) and not ( GS_PlayerIsInCombat ) then
       NotifyInspect("mouseover");
