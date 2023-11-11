@@ -6,8 +6,4 @@
 ## SavedVariables: EnemyNameDB
 ## SavedVariablesPerCharacter: CharacterEnemyNameDB
 
-GpsArrow.lua
-Player.lua
-PlayerFrame.lua
-MainWindow.lua
-main.lua
+PlayerInfo.xml

@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+  <Include file="embeds.xml"/>
+  <Script file="GpsArrow.lua"/>
+  <Script file="Player.lua"/>
+  <Script file="PlayerFrame.lua"/>
+  <Script file="MainWindow.lua"/>
+  <Script file="main.lua"/>
+</Ui>
