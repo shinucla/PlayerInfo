@@ -38,34 +38,31 @@ end
 function addon:AddTheFuckingMark(nameplate)
    local nameplateName = NAME_PLATE_LIB:GetName(nameplate);
 
-   if UnitIsEnemy(nameplateName, "player") ~= nil and UnitCreatureType(nameplateName) == "Humanoid" then
-      for i = 1, 40 do
-	 local f = addon.playerlistFrames[i];
-	 local player = addon.playerlist[i];
+   for i = 1, 40 do
+      local f = addon.playerlistFrames[i];
+      local player = addon.playerlist[i];
+      
+      if f ~= nil and player ~= nil and player.name ~= nil then
+	 local index = string.find(player.name, "-");
 	 
-	 if f ~= nil and player ~= nil and player.name ~= nil then
-	    local index = string.find(player.name, "-");
-	    
-	    -- LUA ternary operator: <variable> = <condition> and <expression_true> or <expression_false>
-	    local nameWithoutRealm = index ~= nil and string.sub(player.name, 1, index-1) or player.name
-	    
-	    if string.lower(nameWithoutRealm) == string.lower(nameplateName) then
-	       --print("creating icon for "..nameWithoutRealm)
-	       player.icon = addon.Utils.ClassIcon:GetOrCreateNameplateIconFrame(nameplate)
-	       player.icon:SetMetadata({ isPlayer = true })
-	       player.icon:UpdateAppearence({ ShowPlusIcon = true, OffsetX=0, OffsetY=0 })
-	    end
-	 end
-      end
-
-   elseif UnitIsEnemy(nameplateName, "player") == nil and UnitCreatureType(nameplateName) == "Humanoid" then
-      for i = 1, #(addon.friendlist) do
-	 local player = addon.friendlist[i];
-	 if string.lower(player.name) == string.lower(nameplateName) then
+	 -- LUA ternary operator: <variable> = <condition> and <expression_true> or <expression_false>
+	 local nameWithoutRealm = index ~= nil and string.sub(player.name, 1, index-1) or player.name
+	 
+	 if string.lower(nameWithoutRealm) == string.lower(nameplateName) then
+	    --print("creating icon for "..nameWithoutRealm)
 	    player.icon = addon.Utils.ClassIcon:GetOrCreateNameplateIconFrame(nameplate)
 	    player.icon:SetMetadata({ isPlayer = true })
 	    player.icon:UpdateAppearence({ ShowPlusIcon = true, OffsetX=0, OffsetY=0 })
 	 end
+      end
+   end
+   
+   for i = 1, #(addon.friendlist) do
+      local player = addon.friendlist[i];
+      if string.lower(player.name) == string.lower(nameplateName) then
+	 player.icon = addon.Utils.ClassIcon:GetOrCreateNameplateIconFrame(nameplate)
+	 player.icon:SetMetadata({ isPlayer = true })
+	 player.icon:UpdateAppearence({ ShowPlusIcon = true, OffsetX=0, OffsetY=0 })
       end
    end
 end
