@@ -1,5 +1,12 @@
+local AceAddon = LibStub("AceAddon-3.0");
+local NAME_PLATE_LIB = LibStub("LibNameplate-1.0");
+
+--------------------------------------------------------------------------------
+
 local PlayerInfo = select( 2, ... );
 local Player = {};
+
+local addon = AceAddon:GetAddon("PlayerInfo", "AceConsole-3.0");
 
 PlayerInfo.Player = Player;
 PlayerInfo.Player.__index = PlayerInfo.Player;    -- Set the __index parameter to reference Player
@@ -14,6 +21,7 @@ function PlayerInfo.Player:new(name, talent, hk)
    self.name = name;
    self.talent = talent;
    self.hk = hk;
+
    return self;
 end
 

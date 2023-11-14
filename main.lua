@@ -1,11 +1,18 @@
+local AceAddon = LibStub("AceAddon-3.0");
+local NAME_PLATE_LIB = LibStub("LibNameplate-1.0");
+
+--------------------------------------------------------------------------------
+   
 local me = select( 2, ... );
 PlayerInfo = me;
 
 SLASH_PLAYERINFO1 = "/playerinfo";
 SLASH_PLAYERINFO2 = "/pi";
 
-local playerlist = {};
-local playerlistFrames = {};
+local addon = AceAddon:GetAddon("PlayerInfo", "AceConsole-3.0");
+addon.playerlist = {};
+addon.playerlistFrames = {};
+addon.friendlist = {};
 
 local inspectTainted = false;
 local desiredInspectedName = nil;
@@ -45,7 +52,7 @@ mainWindow:AddButton("scan list",
 
 --[[ initialize player entry frame list (40 frames) ]]
 for i = 1, 40 do
-   table.insert(playerlistFrames, PlayerInfo.PlayerFrame:Create(mainWindow.container, 460, 20, i));
+   table.insert(addon.playerlistFrames, PlayerInfo.PlayerFrame:Create(mainWindow.container, 460, 20, i));
 end
 
 --------------------------------------------------------------------------------
@@ -57,13 +64,23 @@ end
    4) Arrow pointing for focused teammate
 --]]
 
-function playerlist:OnInitialize()
+function addon.playerlist:OnInitialize()
    CharacterEnemyNameDB = CharacterEnemyNameDB or {};
    CharacterEnemyNameDB.heal = CharacterEnemyNameDB.heal or {};
+   CharacterEnemyNameDB.friend = CharacterEnemyNameDB.friend or {};
    CharacterEnemyNameDB.dps = CharacterEnemyNameDB.dps or {};
+
+   populateFriendList()
 
    self.db = CharacterEnemyNameDB;
 end
+
+function populateFriendList()
+   for i = 1, #(CharacterEnemyNameDB.friend) do
+      table.insert(addon.friendlist, { name=CharacterEnemyNameDB.friend[i] });
+   end
+end
+
 
 --------------------------------------------------------------------------------
 -- Event Hooks
@@ -91,7 +108,7 @@ mainWindow.frame:SetScript("OnEvent",
 
                               if ("ADDON_LOADED" == event and "PlayerInfo" == msg) then
                                  DEFAULT_CHAT_FRAME:AddMessage("Welcome to Player Info", 1,1,0);
-                                 playerlist:OnInitialize();
+                                 addon.playerlist:OnInitialize();
                               end
 
                               if ("PLAYER_ENTERING_BATTLEGROUND" == event) then
@@ -248,8 +265,16 @@ function PlayerInfo_SlashCommandHandler(msg)
    elseif (cmd == "list") then
       ListEnemyDB(arg);
 
+   elseif cmd == "help" then
+      print("/pi save heal xxx")
+      print("/pi remove heal xxx")
+      print("/pi scan")
+
    else
-      listAllPlayerInfo();
+      print("/pi save heal xxx")
+      print("/pi remove heal xxx")
+      print("/pi scan")
+      --listAllPlayerInfo();
    end
 end
 
@@ -268,27 +293,42 @@ end
 function RemoveEnemy(name)
    CharacterEnemyNameDB["heal"] = CharacterEnemyNameDB["heal"] or {};
    CharacterEnemyNameDB["dps"] = CharacterEnemyNameDB["dps"] or {};
+   CharacterEnemyNameDB["friend"] = CharacterEnemyNameDB["friend"] or {};
 
    for i = 1, #(CharacterEnemyNameDB.heal) do
-      if (CharacterEnemyNameDB.heal[i] == name) then
-         table.remove(CharacterEnemyNameDB.heal, i);
+      if (string.lower(CharacterEnemyNameDB.heal[i]) == string.lower(name)) then
+	 print(name.." is removed from healer list");
+	 table.remove(CharacterEnemyNameDB.heal, i);
       end
    end
    for i = 1, #(CharacterEnemyNameDB.dps) do
-      if (CharacterEnemyNameDB.dps[i] == name) then
-         table.remove(CharacterEnemyNameDB.dps, i);
+      if (string.lower(CharacterEnemyNameDB.dps[i]) == string.lower(name)) then
+         print(name.." is removed from dps list");
+	 table.remove(CharacterEnemyNameDB.dps, i);
+      end
+   end
+
+   for i = 1, #(CharacterEnemyNameDB.friend) do
+      if (string.lower(CharacterEnemyNameDB.friend[i]) == string.lower(name)) then
+	 print(name.." is removed from friend list");
+         table.remove(CharacterEnemyNameDB.friend, i);
       end
    end
 end
 
-function ScanBattleground(roleName)
+function ClearOldPlayerList()
    --[[ clear playerlist
       TODO: Change it from global variable to PlayerInfo.playerlist or me.playerlist
       place following code in the first entry lua file (defined in toc)
       -- local me = select( 2, ... );
       -- PlayerInfo = me;
    --]]
-   playerlist = {} --
+   addon.playerlist = {} --
+end
+
+function ScanBattleground(roleName)
+   ClearOldPlayerList()
+   
    updatePlayerInfoImplementation1(40);
 
    --[[ lua array format:
@@ -304,6 +344,7 @@ function ScanBattleground(roleName)
    for i = 1, GetNumBattlefieldScores() do
       local name, killingBlows, honorableKills, deaths, honorGained, faction, unknown, race, class, classToken, damageDone, healingDone, bgRating, ratingChange, preMatchMMR, mmrChange, talentSpec = GetBattlefieldScore(i);
       local max = math.max(damageDone, healingDone);
+      --local delta = math.abs(damageDone - healingDone);
       local value = (roleName == "heal" and healingDone == max and max or (roleName == "dps" and damageDone == max and max or 0));
 
       if (name ~= nil
@@ -333,10 +374,13 @@ function ScanBattleground(roleName)
 
       updatePlayerInfoImplementation1(num);
    end
+
+   --local nameplate = NAME_PLATE_LIB:GetNameplateByName("Holypunch");
+   
 end
 
 function SearchListForTarget(role)
-   playerlist = {};
+   ClearOldPlayerList()
    updatePlayerInfoImplementation1(40);
 
    local num = 0;
@@ -360,18 +404,18 @@ function SearchListForTarget(role)
 end
 
 function ListEnemyDB(role)
-   playerlist = {};
+   ClearOldPlayerList()
    updatePlayerInfoImplementation1(40);
 
    for i = 1, #(CharacterEnemyNameDB[role]) do
-      addToList(CharacterEnemyNameDB[role][i], (role == "heal" and "Holy" or "Blood"), 0);
+      addToList(CharacterEnemyNameDB[role][i], (role == "heal" and "Holy" or (role == "friend" and "Friend" or "Blood")), 0);
    end
 
    updatePlayerInfoImplementation1(math.min(#(CharacterEnemyNameDB[role]), 40));
 end
 
 function listAllPlayerInfo()
-   playerlist = {};
+   ClearOldPlayerList()
    healmarkIndex = 0;
 
    local count = 0;
@@ -545,15 +589,15 @@ do
 end
 
 function addToList(name, talent, hk)
-   table.insert(playerlist, PlayerInfo.Player:new(name, talent, hk));
+   table.insert(addon.playerlist, PlayerInfo.Player:new(name, talent, hk));
 end
 
 function updatePlayerInfoImplementation1(number)
    for i = 1, number do
-      local f = playerlistFrames[i];
-      local player = playerlist[i];
+      local f = addon.playerlistFrames[i];
+      local player = addon.playerlist[i];
 
-      if (playerlist[i]) then
+      if (addon.playerlist[i]) then
          f:SetText(player.name.." >> "..player.talent.." (kills: "..player.hk..")");
          f:SetColor(player:getColor());
          f:SetMacro("/cleartarget\n/target "..player.name.."\n/scan test "..player.name)
