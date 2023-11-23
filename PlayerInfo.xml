@@ -10,4 +10,5 @@
   <Script file="main.lua"/>
 
   <Script file="Utils\ClassIcon.lua"/>
+  <Script file="Utils\Tools.lua"/>
 </Ui>

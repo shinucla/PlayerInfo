@@ -1,8 +1,9 @@
 local AceAddon = LibStub("AceAddon-3.0");
 local NAME_PLATE_LIB = LibStub("LibNameplate-1.0");
+local AceTimer = LibStub("AceTimer-3.0");
 
 --------------------------------------------------------------------------------
-   
+
 local me = select( 2, ... );
 PlayerInfo = me;
 
@@ -48,6 +49,16 @@ mainWindow:AddButton("scan list",
                      end
 );
 
+
+AceTimer:ScheduleRepeatingTimer(
+   function()
+      --if 0 == #(addon.playerlist) then
+      ScanBattleground("heal")
+      --end
+   end,
+   0 == #(addon.playerlist) and 5 or 20 --[[ 5 or 20 seconds ]]
+);
+
 --------------------------------------------------------------------------------
 
 --[[ initialize player entry frame list (40 frames) ]]
@@ -70,17 +81,32 @@ function addon.playerlist:OnInitialize()
    CharacterEnemyNameDB.friend = CharacterEnemyNameDB.friend or {};
    CharacterEnemyNameDB.dps = CharacterEnemyNameDB.dps or {};
 
+   migrateToTimedList("heal");
+   migrateToTimedList("dps");
+   migrateToTimedList("friend");
+
    populateFriendList()
 
    self.db = CharacterEnemyNameDB;
 end
 
 function populateFriendList()
-   for i = 1, #(CharacterEnemyNameDB.friend) do
-      table.insert(addon.friendlist, { name=CharacterEnemyNameDB.friend[i] });
+   for k,v in pairs(CharacterEnemyNameDB.friend) do
+      table.insert(addon.friendlist, { name = k });
    end
 end
 
+function migrateToTimedList(role)
+   if 0 < #(CharacterEnemyNameDB[role]) then
+      local list = {};
+
+      for i = 1, #(CharacterEnemyNameDB[role]) do
+         list[CharacterEnemyNameDB[role][i]] = { utc = time() };
+      end
+
+      CharacterEnemyNameDB[role] = list;
+   end
+end
 
 --------------------------------------------------------------------------------
 -- Event Hooks
@@ -189,7 +215,7 @@ function PlayerInfo.LoadLastPoint()
                                            -295);
       return;
    end
-   
+
    local option = CharacterEnemyNameDB;
 
    if (option
@@ -281,13 +307,13 @@ end
 function SaveEnemy(role, name)
    CharacterEnemyNameDB[role] = CharacterEnemyNameDB[role] or {};
 
-   for i = 1, #(CharacterEnemyNameDB[role]) do
-      if (CharacterEnemyNameDB[role][i] == name) then
-         return;
-      end
-   end
+   CharacterEnemyNameDB[role][name] = { utc = time() };
 
-   table.insert(CharacterEnemyNameDB[role], name);
+   -- for key, value in pairs(CharacterEnemyNameDB[role]) do
+   --    if value.utc < (time() - 100 * 24 * 60 * 60) then
+   --    CharacterEnemyNameDB[role][key] = nil;
+   --    end
+   -- end
 end
 
 function RemoveEnemy(name)
@@ -295,25 +321,29 @@ function RemoveEnemy(name)
    CharacterEnemyNameDB["dps"] = CharacterEnemyNameDB["dps"] or {};
    CharacterEnemyNameDB["friend"] = CharacterEnemyNameDB["friend"] or {};
 
-   for i = 1, #(CharacterEnemyNameDB.heal) do
-      if (string.lower(CharacterEnemyNameDB.heal[i]) == string.lower(name)) then
-	 print(name.." is removed from healer list");
-	 table.remove(CharacterEnemyNameDB.heal, i);
-      end
-   end
-   for i = 1, #(CharacterEnemyNameDB.dps) do
-      if (string.lower(CharacterEnemyNameDB.dps[i]) == string.lower(name)) then
-         print(name.." is removed from dps list");
-	 table.remove(CharacterEnemyNameDB.dps, i);
-      end
-   end
+   CharacterEnemyNameDB.heal[name] = nil;
+   CharacterEnemyNameDB.dps[name] = nil;
+   CharacterEnemyNameDB.friend[name] = nil;
 
-   for i = 1, #(CharacterEnemyNameDB.friend) do
-      if (string.lower(CharacterEnemyNameDB.friend[i]) == string.lower(name)) then
-	 print(name.." is removed from friend list");
-         table.remove(CharacterEnemyNameDB.friend, i);
-      end
-   end
+   -- for i = 1, #(CharacterEnemyNameDB.heal) do
+   --    if (string.lower(CharacterEnemyNameDB.heal[i]) == string.lower(name)) then
+   --       print(name.." is removed from healer list");
+   --       table.remove(CharacterEnemyNameDB.heal, i);
+   --    end
+   -- end
+   -- for i = 1, #(CharacterEnemyNameDB.dps) do
+   --    if (string.lower(CharacterEnemyNameDB.dps[i]) == string.lower(name)) then
+   --       print(name.." is removed from dps list");
+   --       table.remove(CharacterEnemyNameDB.dps, i);
+   --    end
+   -- end
+   --
+   -- for i = 1, #(CharacterEnemyNameDB.friend) do
+   --    if (string.lower(CharacterEnemyNameDB.friend[i]) == string.lower(name)) then
+   --       print(name.." is removed from friend list");
+   --       table.remove(CharacterEnemyNameDB.friend, i);
+   --    end
+   -- end
 end
 
 function ClearOldPlayerList()
@@ -328,7 +358,7 @@ end
 
 function ScanBattleground(roleName)
    ClearOldPlayerList()
-   
+
    updatePlayerInfoImplementation1(40);
 
    --[[ lua array format:
@@ -376,7 +406,7 @@ function ScanBattleground(roleName)
    end
 
    --local nameplate = NAME_PLATE_LIB:GetNameplateByName("Holypunch");
-   
+
 end
 
 function SearchListForTarget(role)
@@ -389,13 +419,21 @@ function SearchListForTarget(role)
 
       if (name ~= nil) then
          if not (UnitIsFriend("player", name)) then
-            for i = 1, #(CharacterEnemyNameDB[role]) do
-               if (CharacterEnemyNameDB[role][i] == name) then -- and initTarget == false) then
+            for k,v in pairs(CharacterEnemyNameDB[role]) do
+               if (k == name) then -- and initTarget == false) then
                   addToList(name, (role == "heal" and "Holy" or "Blood"), 0);
                   DEFAULT_CHAT_FRAME:AddMessage(name, 1,1,0);
                   num = num + 1;
                end
             end
+
+            --for i = 1, #(CharacterEnemyNameDB[role]) do
+            --   if (CharacterEnemyNameDB[role][i] == name) then -- and initTarget == false) then
+            --      addToList(name, (role == "heal" and "Holy" or "Blood"), 0);
+            --      DEFAULT_CHAT_FRAME:AddMessage(name, 1,1,0);
+            --      num = num + 1;
+            --   end
+            --end
          end
       end
    end
@@ -407,11 +445,14 @@ function ListEnemyDB(role)
    ClearOldPlayerList()
    updatePlayerInfoImplementation1(40);
 
-   for i = 1, #(CharacterEnemyNameDB[role]) do
-      addToList(CharacterEnemyNameDB[role][i], (role == "heal" and "Holy" or (role == "friend" and "Friend" or "Blood")), 0);
+   -- for i = 1, #(CharacterEnemyNameDB[role]) do
+   --    addToList(CharacterEnemyNameDB[role][i], (role == "heal" and "Holy" or (role == "friend" and "Friend" or "Blood")), 0);
+   -- end
+   for k,v in pairs(CharacterEnemyNameDB[role]) do
+      addToList(k, (role == "heal" and "Holy" or (role == "friend" and "Friend" or "Blood")), 0);
    end
 
-   updatePlayerInfoImplementation1(math.min(#(CharacterEnemyNameDB[role]), 40));
+   updatePlayerInfoImplementation1(40); -- math.min(#(CharacterEnemyNameDB[role]), 40));
 end
 
 function listAllPlayerInfo()
